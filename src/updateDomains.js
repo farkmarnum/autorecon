@@ -26,7 +26,7 @@ export const updateDomains = async () => {
   const domainList = await getDomains()
   try {
     const entry = new DomainList({ domains: domainList })
-    const resp = await entry.save()
+    await entry.save()
 
     console.info('updated domains!')
   } catch (err) {
