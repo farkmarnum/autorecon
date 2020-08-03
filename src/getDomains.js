@@ -16,5 +16,5 @@ export const getDomains = async () => {
   domains = Array.from(new Set(domains))
   domains = domains.sort()
 
-  return domains.slice(20, 24)
+  return domains
 }
