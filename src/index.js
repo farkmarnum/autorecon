@@ -19,8 +19,6 @@ import {
   clearCache,
 } from './helpers/cache'
 
-const CPUS = require('os').cpus().length
-
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
   try {
@@ -39,7 +37,7 @@ const doSupervisor = async () => {
     await init()
 
     const workers = []
-    for (let i = 0; i < CPUS; i += 1) {
+    for (let i = 0; i < process.env.PARALLELISM; i += 1) {
       workers[i] = cluster.fork()
     }
 
