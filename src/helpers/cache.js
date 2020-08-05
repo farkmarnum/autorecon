@@ -34,15 +34,13 @@ export const writeCache = (fname, data) => {
 }
 
 export const clearCache = () => {
-  try {
-    ;[DOMAIN_CACHE, SUBDOMAIN_CACHE, PORT_CACHE].forEach((fname) => {
-      try {
-        fs.unlinkSync(fname)
-      } catch (err) {
-        console.warn(err)
+  ;[DOMAIN_CACHE, SUBDOMAIN_CACHE, PORT_CACHE].forEach((fname) => {
+    try {
+      fs.renameSync(fname, `${fname}-BKP`)
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        console.error(err)
       }
-    })
-  } catch (err) {
-    console.error(err)
-  }
+    }
+  })
 }
