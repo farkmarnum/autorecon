@@ -11,7 +11,7 @@ const TIMEOUT = 1 // minute
 const TIMEOUT_MS = TIMEOUT * 60 * 1000
 
 export const nmap = async (subdomain) => {
-  const proc = spawn('nmap', ['-sS', subdomain])
+  const proc = spawn('nmap', [subdomain])
 
   const promise = new Promise((resolve) => {
     let resp = ''
