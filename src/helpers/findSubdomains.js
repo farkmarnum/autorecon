@@ -8,18 +8,14 @@ import { once } from 'events'
 import { spawn } from 'child_process'
 import {
   SCAN_FOR_SUBDOMAINS,
-  SCAN_FOR_PORTS,
   SUBDOMAIN_RESULT,
-  PORT_RESULT,
   REQUEST_WORK,
-} from './constants/messages'
+} from '../constants/messages'
 
 const TIMEOUT = 1 // minute
 const TIMEOUT_MS = TIMEOUT * 60 * 1000
 
 export const amass = async (domain) => {
-  console.info(`[+] Discovering subdomains for ${domain}`)
-
   const proc = spawn('amass', [
     'enum',
     '-d', domain, /* eslint-disable-line */
@@ -37,7 +33,7 @@ export const amass = async (domain) => {
     // Manually kill the process after TIMEOUT_MS, since sometimes amass doesn't actually stop after TIMEOUT
     setTimeout(() => {
       proc.kill()
-      resolve()
+      resolve([])
     }, TIMEOUT_MS)
 
     return once(proc, 'exit')
@@ -49,38 +45,38 @@ export const amass = async (domain) => {
 export const findSubdomains = (domains) =>
   new Promise((resolve) => {
     const subdomains = new Set()
-    console.info(`findSubdomains called, domains.length = ${domains.length}`)
+    process.stdout.write('Scanning for subdomains...')
 
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    workers.forEach((worker) => {
-      worker.on('message', ({ type, pid, data }) => {
-        const sendWork = () => {
-          if (domains.length) {
-            const domain = domains.pop()
-            console.info('sending SCAN_FOR_SUBDOMAINS')
-            worker.send({ type: SCAN_FOR_SUBDOMAINS, domain, pid })
-          } else {
-            workersFinished += 1
-            console.info(`Workers complete: ${workersFinished}`)
+    const sendWork = (worker) => {
+      if (domains.length) {
+        const target = domains.pop()
+        worker.send({ type: SCAN_FOR_SUBDOMAINS, target })
+      } else {
+        workersFinished += 1
 
-            if (workersFinished >= workers.length) {
-              console.info('ALL DONE')
-              resolve(Array.from(subdomains))
-            }
-          }
+        if (workersFinished >= workers.length) {
+          const result = Array.from(subdomains).filter((s) => s.length > 0)
+          console.info(`Found ${result.length} subdomains.`)
+
+          resolve(result)
         }
+      }
+    }
 
+    workers.forEach((worker) => {
+      worker.on('message', ({ type, data }) => {
         if (type === SUBDOMAIN_RESULT) {
-          console.info('SUBDOMAIN_RESULT received')
-          console.info('DATA', data)
+          process.stdout.write('.')
           data.forEach((subdomain) => subdomains.add(subdomain))
-          sendWork()
+          sendWork(worker)
         } else if (type === REQUEST_WORK) {
-          console.info('REQUEST_WORK received')
-          sendWork()
+          sendWork(worker)
         }
       })
     })
+
+    workers.forEach(sendWork)
   })

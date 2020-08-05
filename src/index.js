@@ -1,18 +1,25 @@
 import cluster from 'cluster'
 import mongoose from 'mongoose'
-import { init } from './init'
-import { getDomains } from './getDomains'
-import { amass, findSubdomains } from './findSubdomains'
-import { scanPorts } from './scanPorts'
+import { init } from './helpers/init'
+import { getDomains } from './helpers/getDomains'
+import { amass, findSubdomains } from './helpers/findSubdomains'
+import { nmap, scanPorts } from './helpers/scanPorts'
 import {
   SCAN_FOR_SUBDOMAINS,
   SCAN_FOR_PORTS,
   SUBDOMAIN_RESULT,
-  // PORT_RESULT,
-  REQUEST_WORK,
+  PORT_RESULT,
 } from './constants/messages'
+import {
+  DOMAIN_CACHE,
+  SUBDOMAIN_CACHE,
+  PORT_CACHE,
+  readCache,
+  writeCache,
+  clearCache,
+} from './helpers/cache'
 
-const cpus = require('os').cpus().length
+const CPUS = require('os').cpus().length
 
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
@@ -25,7 +32,6 @@ const storeScan = async (entries) => {
     console.error(err)
   }
 }
-
 const doSupervisor = async () => {
   console.info('Starting supervisor')
 
@@ -33,29 +39,40 @@ const doSupervisor = async () => {
     await init()
 
     const workers = []
-    for (let i = 0; i < cpus; i += 1) {
+    for (let i = 0; i < CPUS; i += 1) {
       workers[i] = cluster.fork()
     }
 
-    const domainData = await getDomains()
+    const domainData = readCache(DOMAIN_CACHE) || (await getDomains())
+    writeCache(DOMAIN_CACHE, domainData)
 
-    console.info('Domains fetched')
+    const subdomainData =
+      readCache(SUBDOMAIN_CACHE) || (await findSubdomains(domainData))
+    writeCache(SUBDOMAIN_CACHE, subdomainData)
 
-    const subdomainData = await findSubdomains(domainData)
-
-    const portData = await scanPorts(subdomainData)
+    const portData = readCache(PORT_CACHE) || (await scanPorts(subdomainData))
+    writeCache(PORT_CACHE, portData)
 
     const scan = portData
-      .filter((s) => s.length > 0)
-      .map((s) => s.split('.').reverse().join('.'))
+      .map(
+        ({ subdomain, ports }) =>
+          `${subdomain.split('.').reverse().join('.')} ${ports
+            .sort()
+            .join(',')}`,
+      )
       .sort()
 
     await storeScan(scan)
+
+    clearCache()
+
+    console.info('Shutting down workers...')
 
     Object.values(cluster.workers).forEach((worker) => {
       worker.kill()
     })
 
+    console.info('Complete.')
     process.exit(0)
   } catch (err) {
     console.error(err)
@@ -64,20 +81,23 @@ const doSupervisor = async () => {
 }
 
 const doWorker = () => {
-  console.info('Worker started')
-  process.send({ type: REQUEST_WORK, pid: process.pid })
-  console.info('REQUEST_WORK sent')
+  process.on('message', async ({ type, target }) => {
+    let data
 
-  process.on('message', async ({ type, pid, domain }) => {
-    if (type === SCAN_FOR_SUBDOMAINS && pid === process.pid) {
-      console.info('SCAN_FOR_SUBDOMAINS received')
-      const data = await amass(domain)
-      process.send({ type: SUBDOMAIN_RESULT, pid: process.pid, data })
-      console.info('SCAN_FOR_SUBDOMAINS complete')
-    } else if (type === SCAN_FOR_PORTS && pid === process.pid) {
-      console.info('SCAN_FOR_PORTS received')
-      //
-      console.info('SCAN_FOR_PORTS complete')
+    switch (type) {
+      case SCAN_FOR_SUBDOMAINS:
+        data = await amass(target)
+        process.send({ type: SUBDOMAIN_RESULT, data })
+        break
+      case SCAN_FOR_PORTS:
+        data = await nmap(target)
+        process.send({ type: PORT_RESULT, data })
+        break
+      default:
+        console.error(
+          `Unknown message type! Message with type ${type} with target ${target} can not be processed.`,
+        )
+        break
     }
   })
 }

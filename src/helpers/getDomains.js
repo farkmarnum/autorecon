@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
-import { exclude } from './constants/domains'
-import { domainListUrl } from './constants/resources'
+import { exclude } from '../constants/domains'
+import { domainListUrl } from '../constants/resources'
 
 const reWild = /^.*(\*\.|\(\*\)\.)/gi
 
@@ -15,6 +15,8 @@ export const getDomains = async () => {
   domains = domains.filter((domain) => !exclude.includes(domain))
   domains = Array.from(new Set(domains))
   domains = domains.sort()
+
+  console.info(`Fetched ${domains.length} domains.`)
 
   return domains
 }

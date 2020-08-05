@@ -5,7 +5,7 @@ import mongoose from 'mongoose'
 dotenv.config()
 
 export const init = async () => {
-  await requireDir(`${__dirname}/models`)
+  await requireDir(`${__dirname}/../models`)
 
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
