@@ -52,6 +52,10 @@ const doSupervisor = async () => {
     writeCache(PORT_CACHE, portData)
 
     const scan = portData
+      .filter(
+        ({ subdomain, ports }) =>
+          subdomain && Array.isArray(ports) && ports.length,
+      )
       .map(
         ({ subdomain, ports }) =>
           `${subdomain.split('.').reverse().join('.')} ${ports
