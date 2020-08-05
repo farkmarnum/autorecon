@@ -21,17 +21,17 @@ import {
 
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
-  try {
-    const entry = new Scan({ entries })
-    await entry.save()
 
-    console.info('Scan stored')
-  } catch (err) {
-    console.error(err)
-  }
+  const entry = new Scan({ entries })
+  await entry.save()
+
+  console.info('Scan stored')
 }
+
 const doSupervisor = async () => {
   console.info('Starting supervisor')
+
+  const t = Date.now()
 
   try {
     await init()
@@ -75,6 +75,7 @@ const doSupervisor = async () => {
     })
 
     console.info('Complete.')
+    console.info(`Scan took ${Date.now() - t} ms`)
     process.exit(0)
   } catch (err) {
     console.error(err)
