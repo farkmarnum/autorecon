@@ -35,7 +35,13 @@ export const writeCache = (fname, data) => {
 
 export const clearCache = () => {
   try {
-    ;[DOMAIN_CACHE, SUBDOMAIN_CACHE, PORT_CACHE].forEach(fs.unlinkSync)
+    ;[DOMAIN_CACHE, SUBDOMAIN_CACHE, PORT_CACHE].forEach((fname) => {
+      try {
+        fs.unlinkSync(fname)
+      } catch (err) {
+        console.warn(err)
+      }
+    })
   } catch (err) {
     console.error(err)
   }
