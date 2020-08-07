@@ -12,7 +12,7 @@ import {
   REQUEST_WORK,
 } from '../constants/messages'
 
-const TIMEOUT = 1 // minute
+const TIMEOUT = 5 // minute
 const TIMEOUT_MS = TIMEOUT * 60 * 1000
 
 export const amass = async (domain) => {
@@ -20,7 +20,6 @@ export const amass = async (domain) => {
     'enum',
     '-d', domain, /* eslint-disable-line */
     '-nolocaldb',
-    '-passive',
     '-timeout', TIMEOUT, /* eslint-disable-line */
   ])
 

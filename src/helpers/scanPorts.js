@@ -9,7 +9,7 @@ import {
 import { chunk } from './util'
 
 export const nmap = async (subdomains) => {
-  const proc = spawn('nmap', ['-sS', '-n', '-T4', ...subdomains])
+  const proc = spawn('nmap', ['-sS', '-n', ...subdomains])
 
   const promise = new Promise((resolve) => {
     let resp = ''
