@@ -32,6 +32,9 @@ export const amass = async (domain) => {
 
     // Manually kill the process after TIMEOUT_MS, since sometimes amass doesn't actually stop after TIMEOUT
     setTimeout(() => {
+      console.warn(
+        `TIMEOUT - killing \`amass enum\` of ${domain} after ${TIMEOUT_MS}ms`,
+      )
       proc.kill()
       resolve([])
     }, TIMEOUT_MS)

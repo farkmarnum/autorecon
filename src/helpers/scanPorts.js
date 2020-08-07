@@ -6,12 +6,10 @@ import {
   PORT_RESULT,
   REQUEST_WORK,
 } from '../constants/messages'
+import { chunk } from './util'
 
-const TIMEOUT = 1 // minute
-const TIMEOUT_MS = TIMEOUT * 60 * 1000
-
-export const nmap = async (subdomain) => {
-  const proc = spawn('nmap', [subdomain])
+export const nmap = async (subdomains) => {
+  const proc = spawn('nmap', ['-sS', '-n', '-T4', ...subdomains])
 
   const promise = new Promise((resolve) => {
     let resp = ''
@@ -19,28 +17,31 @@ export const nmap = async (subdomain) => {
       resp += data
     })
 
-    setTimeout(() => {
-      proc.kill()
-      resolve([])
-    }, TIMEOUT_MS)
-
     once(proc, 'exit').then(() => {
-      try {
-        const portInfo = resp.split(/PORT\W+STATE\W+SERVICE/).slice(-1)[0]
-        let openPorts = []
+      const reports = resp.match(/Nmap scan report for [\s\S]*?\n\n/g)
 
-        if (portInfo) {
-          const portInfoList = portInfo.split('\n')
-          const openPortsInfo = portInfoList.filter((s) => s.match(/\bopen\b/))
-          openPorts = openPortsInfo.map((s) => s.replace(/^(\d+).*$/, '$1'))
-          openPorts = openPorts.map((s) => parseInt(s, 10))
+      const result = (reports || []).map((report) => {
+        try {
+          const [infoText, portText] = report.split(/PORT\W+STATE\W+SERVICE/)
+
+          const { subdomain } = infoText.match(
+            /Nmap scan report for (?<subdomain>[^ ]*?) /,
+          ).groups
+
+          const openPorts = (portText || '')
+            .split('\n')
+            .filter((s) => s.match(/\bopen\b/))
+            .map((s) => s.replace(/^(\d+).*$/, '$1'))
+            .map((s) => parseInt(s, 10))
+
+          return { subdomain, openPorts }
+        } catch (err) {
+          console.error('ERROR ON HEEEEERRRREEEE', err)
+          return []
         }
+      })
 
-        resolve({ subdomain, ports: openPorts })
-      } catch (err) {
-        console.error(err)
-        resolve({ subdomain, ports: [] })
-      }
+      resolve(result)
     })
   })
 
@@ -55,16 +56,18 @@ export const scanPorts = (subdomains) =>
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
+    const chunkedSubdomains = chunk(subdomains, workers.length)
+
     const sendWork = (worker) => {
-      if (subdomains.length) {
-        const target = subdomains.pop()
+      if (chunkedSubdomains.length) {
+        const target = chunkedSubdomains.pop()
         worker.send({ type: SCAN_FOR_PORTS, target })
       } else {
         workersFinished += 1
 
         if (workersFinished >= workers.length) {
           console.info('Scanning ports complete.')
-          resolve(subdomainsWithPorts)
+          resolve(subdomainsWithPorts.flat())
         }
       }
     }
