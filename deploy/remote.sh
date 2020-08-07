@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REPO_SRC=https://github.com/farkmarnum/autorecon.git
-CODE_PATH=/usr/src/autorepo
+CODE_PATH=/usr/src/autorecon
 PM2_CONFIG=$CODE_PATH/prod.config.js
 
 cd $LOCALREPO || exit 1
