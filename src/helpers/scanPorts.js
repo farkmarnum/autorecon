@@ -9,7 +9,9 @@ import {
 import { chunk } from './util'
 
 export const nmap = async (subdomains) => {
-  const proc = spawn('nmap', ['-sS', '-n', ...subdomains])
+  const nmapSpeedFromEnv = parseInt(process.env.NMAP_SPEED || '3', 10)
+  const nmapSpeed = Math.max(0, Math.min(5, nmapSpeedFromEnv))
+  const proc = spawn('nmap', ['-sS', '-n', `-T${nmapSpeed}`, ...subdomains])
 
   const promise = new Promise((resolve) => {
     let resp = ''
@@ -37,7 +39,7 @@ export const nmap = async (subdomains) => {
 
           return { subdomain, openPorts }
         } catch (err) {
-          console.error('ERROR ON HEEEEERRRREEEE', err)
+          console.error(err)
           return []
         }
       })
