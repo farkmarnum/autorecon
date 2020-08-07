@@ -1,3 +1,5 @@
 #!/bin/bash
 
-sudo apt update && sudo apt install nmap pm2 node
+sudo apt update
+&& sudo apt install -y nmap npm
+&& sudo npm i -g pm2
