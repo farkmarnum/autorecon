@@ -15,6 +15,7 @@ export const nmap = async (subdomains) => {
     let resp = ''
     proc.stdout.setEncoding('utf8').on('data', (data) => {
       resp += data
+      console.info(data)
     })
 
     once(proc, 'exit').then(() => {
