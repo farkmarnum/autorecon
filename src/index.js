@@ -88,6 +88,7 @@ const doSupervisor = async () => {
 }
 
 const doWorker = () => {
+  console.log('Worker starting.')
   process.on('message', async ({ type, target }) => {
     let data
 
