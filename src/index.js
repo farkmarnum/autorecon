@@ -21,6 +21,8 @@ import {
 
 const CPUS = require('os').cpus().length
 
+const PARALLELISM = CPUS * 3
+
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
 
@@ -39,7 +41,7 @@ const doSupervisor = async () => {
     await init()
 
     const workers = []
-    for (let i = 0; i < CPUS; i += 1) {
+    for (let i = 0; i < PARALLELISM; i += 1) {
       workers[i] = cluster.fork()
     }
 

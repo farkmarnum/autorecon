@@ -12,7 +12,7 @@ import {
   REQUEST_WORK,
 } from '../constants/messages'
 
-const TIMEOUT = 5 // minute
+const TIMEOUT = 15 // minutes
 const TIMEOUT_MS = TIMEOUT * 60 * 1000
 
 export const amass = async (domain) => {
