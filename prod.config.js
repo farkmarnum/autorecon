@@ -3,8 +3,12 @@ module.exports = {
     {
       name: 'autorecon',
       script: `${__dirname}/dist/index.js`,
-      watch: false,
-      instances: 1,
+      env: {
+        NODE_ENV: 'development',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+      },
     },
   ],
 }
