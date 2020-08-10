@@ -2,7 +2,7 @@ import cluster from 'cluster'
 import mongoose from 'mongoose'
 import { init } from './helpers/init'
 import { getDomains } from './helpers/getDomains'
-import { amass, findSubdomains } from './helpers/findSubdomains'
+import { findomain, findSubdomains } from './helpers/findSubdomains'
 import { nmap, scanPorts } from './helpers/scanPorts'
 import {
   SCAN_FOR_SUBDOMAINS,
@@ -21,7 +21,7 @@ import {
 
 const CPUS = require('os').cpus().length
 
-const PARALLELISM = CPUS * 3
+const PARALLELISM = CPUS
 
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
@@ -57,12 +57,12 @@ const doSupervisor = async () => {
 
     const scan = portData
       .filter(
-        ({ subdomain, ports }) =>
-          subdomain && Array.isArray(ports) && ports.length,
+        ({ subdomain, openPorts }) =>
+          subdomain && Array.isArray(openPorts) && openPorts.length,
       )
       .map(
-        ({ subdomain, ports }) =>
-          `${subdomain.split('.').reverse().join('.')} ${ports
+        ({ subdomain, openPorts }) =>
+          `${subdomain.split('.').reverse().join('.')} ${openPorts
             .sort()
             .join(',')}`,
       )
@@ -88,13 +88,13 @@ const doSupervisor = async () => {
 }
 
 const doWorker = () => {
-  console.log('Worker starting.')
+  console.info('Worker starting.')
   process.on('message', async ({ type, target }) => {
     let data
 
     switch (type) {
       case SCAN_FOR_SUBDOMAINS:
-        data = await amass(target)
+        data = await findomain(target)
         process.send({ type: SUBDOMAIN_RESULT, data })
         break
       case SCAN_FOR_PORTS:

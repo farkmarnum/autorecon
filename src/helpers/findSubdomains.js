@@ -12,32 +12,15 @@ import {
   REQUEST_WORK,
 } from '../constants/messages'
 
-const TIMEOUT = 5 // minutes
-const TIMEOUT_MS = TIMEOUT * 60 * 1000
-
-export const amass = async (domain) => {
-  const proc = spawn('amass', [
-    'enum',
-    '-d', domain, /* eslint-disable-line */
-    '-nolocaldb',
-    '-passive',
-    '-timeout', TIMEOUT, /* eslint-disable-line */
-  ])
+export const findomain = async (domain) => {
+  const proc = spawn('findomain', ['-q', '-t', domain])
+  console.info(domain)
 
   const promise = new Promise((resolve) => {
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
       const subdomains = resp.split('\n').map((s) => s.trim())
       resolve(subdomains)
     })
-
-    // Manually kill the process after TIMEOUT_MS, since sometimes amass doesn't actually stop after TIMEOUT
-    setTimeout(() => {
-      console.warn(
-        `TIMEOUT - killing \`amass enum\` of ${domain} after ${TIMEOUT_MS}ms`,
-      )
-      proc.kill()
-      resolve([])
-    }, TIMEOUT_MS)
 
     return once(proc, 'exit')
   })

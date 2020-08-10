@@ -11,38 +11,45 @@ import { chunk } from './util'
 export const nmap = async (subdomains) => {
   const nmapSpeedFromEnv = parseInt(process.env.NMAP_SPEED || '3', 10)
   const nmapSpeed = Math.max(0, Math.min(5, nmapSpeedFromEnv))
-  const proc = spawn('nmap', ['-sS', '-n', `-T${nmapSpeed}`, ...subdomains])
+  const proc = spawn('nmap', [
+    '-F',
+    '-sS',
+    '-n',
+    `-T${nmapSpeed}`,
+    ...subdomains,
+  ])
 
   const promise = new Promise((resolve) => {
     let resp = ''
     proc.stdout.setEncoding('utf8').on('data', (data) => {
       resp += data
-      console.info(data)
     })
 
     once(proc, 'exit').then(() => {
       const reports = resp.match(/Nmap scan report for [\s\S]*?\n\n/g)
 
-      const result = (reports || []).map((report) => {
-        try {
-          const [infoText, portText] = report.split(/PORT\W+STATE\W+SERVICE/)
+      const result = (reports || [])
+        .map((report) => {
+          try {
+            const [infoText, portText] = report.split(/PORT\W+STATE\W+SERVICE/)
 
-          const { subdomain } = infoText.match(
-            /Nmap scan report for (?<subdomain>[^ ]*?) /,
-          ).groups
+            const { subdomain } = infoText.match(
+              /Nmap scan report for (?<subdomain>[^ ]*?) /,
+            ).groups
 
-          const openPorts = (portText || '')
-            .split('\n')
-            .filter((s) => s.match(/\bopen\b/))
-            .map((s) => s.replace(/^(\d+).*$/, '$1'))
-            .map((s) => parseInt(s, 10))
+            const openPorts = (portText || '')
+              .split('\n')
+              .filter((s) => s.match(/\bopen\b/))
+              .map((s) => s.replace(/^(\d+).*$/, '$1'))
+              .map((s) => parseInt(s, 10))
 
-          return { subdomain, openPorts }
-        } catch (err) {
-          console.error(err)
-          return []
-        }
-      })
+            return { subdomain, openPorts }
+          } catch (err) {
+            console.error(err)
+            return undefined
+          }
+        })
+        .filter((a) => a)
 
       resolve(result)
     })
@@ -59,7 +66,7 @@ export const scanPorts = (subdomains) =>
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const chunkedSubdomains = chunk(subdomains, workers.length)
+    const chunkedSubdomains = chunk(subdomains, { chunks: workers.length })
 
     const sendWork = (worker) => {
       if (chunkedSubdomains.length) {
@@ -70,7 +77,9 @@ export const scanPorts = (subdomains) =>
 
         if (workersFinished >= workers.length) {
           console.info('Scanning ports complete.')
-          resolve(subdomainsWithPorts.flat())
+          const result = subdomainsWithPorts.flat()
+          console.log(result)
+          resolve(result)
         }
       }
     }
