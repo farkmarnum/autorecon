@@ -69,7 +69,9 @@ const doSupervisor = async () => {
       .sort()
 
     // Give the network some time to recover...
-    await new Promise((resolve) => setTimeout(resolve, 1000 * 10))
+    const tenSeconds = 1000 * 10
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    await wait(tenSeconds)
 
     // store scan
     await storeScan(scan)
