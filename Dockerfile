@@ -19,6 +19,7 @@ FROM alpine:3.12 as install_tools
 ENV NMAP_VERSION 7.80-r2
 ENV NODE_VERSION 12.18.3-r0
 RUN apk add --update --no-cache nmap==${NMAP_VERSION} nodejs==${NODE_VERSION} npm==${NODE_VERSION}
+COPY --from=build_findomain /usr/bin/findomain /usr/bin/findomain
 
 # Build code
 FROM node as build
