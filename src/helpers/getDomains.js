@@ -12,6 +12,7 @@ export const getDomains = async () => {
 
   let domains = wildcards.filter((str) => str.match(reWild))
   domains = domains.map((str) => str.replace(reWild, ''))
+  domains = domains.filter((str) => !str.includes('*'))
   domains = domains.filter((domain) => !exclude.includes(domain))
   domains = Array.from(new Set(domains))
   domains = domains.sort()
