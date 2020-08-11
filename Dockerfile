@@ -26,7 +26,7 @@ FROM node as build
 WORKDIR /opt
 ENV REPO_SRC https://github.com/farkmarnum/autorecon.git
 # don't cache this part:
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+ARG CACHEBUST=1
 RUN git clone ${REPO_SRC} && cd autorecon && npm i && npm run build
 
 # Run
