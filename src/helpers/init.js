@@ -7,12 +7,10 @@ dotenv.config()
 export const init = async () => {
   await requireDir(`${__dirname}/../models`)
 
-  try {
-    await mongoose.connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-  } catch (err) {
-    console.error(err)
-  }
+  console.info(require('os').networkInterfaces())
+
+  await mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
 }
