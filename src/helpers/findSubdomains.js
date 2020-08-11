@@ -14,7 +14,7 @@ import {
 
 readline.emitKeypressEvents(process.stdin)
 
-const TIMEOUT = 1 // minutes
+const TIMEOUT = 3 // minutes
 const TIMEOUT_MS = TIMEOUT * 60 * 1000
 
 export const findomain = async (domain) => {
