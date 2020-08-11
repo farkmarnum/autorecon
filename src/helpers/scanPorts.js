@@ -78,7 +78,6 @@ export const scanPorts = (subdomains) =>
         if (workersFinished >= workers.length) {
           console.info('Scanning ports complete.')
           const result = subdomainsWithPorts.flat()
-          console.log(result)
           resolve(result)
         }
       }
