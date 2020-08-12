@@ -9,12 +9,12 @@ WORKDIR /opt
 ENV REPO_SRC https://github.com/farkmarnum/autorecon.git
 # don't cache this part:
 ARG CACHEBUST=1
-RUN git clone ${REPO_SRC} && cd autorecon && npm i && npm run build
+RUN git clone ${REPO_SRC} && cd autorecon && npm i --silent && npm run build
 
 # Run
 FROM install_tools as prod
 COPY --from=build /opt/autorecon /opt/autorecon
 WORKDIR /opt/autorecon
-RUN npm i --production
+RUN npm i --silent --production
 
 CMD ["node", "./dist/analyze.js"]
