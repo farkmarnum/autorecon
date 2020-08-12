@@ -8,6 +8,8 @@ import {
 } from '../constants/messages'
 import { chunk } from './util'
 
+const PER_PROC_TIMEOUT = 5 // minutes
+
 export const nmap = async (subdomains) => {
   const nmapSpeedFromEnv = parseInt(process.env.NMAP_SPEED || '3', 10)
   const nmapSpeed = Math.max(0, Math.min(5, nmapSpeedFromEnv))
@@ -16,6 +18,8 @@ export const nmap = async (subdomains) => {
     '-sS',
     '-n',
     `-T${nmapSpeed}`,
+    '--host-timeout',
+    `${PER_PROC_TIMEOUT}m`,
     ...subdomains,
   ])
 
