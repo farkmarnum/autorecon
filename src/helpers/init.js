@@ -2,6 +2,10 @@ import requireDir from 'require-dir'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 
+process.on('unhandledRejection', (err) => {
+  throw err
+})
+
 dotenv.config()
 
 const MAX_ATTEMPTS = 10
