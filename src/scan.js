@@ -35,6 +35,12 @@ const storeScan = async (entries) => {
 const doSupervisor = async () => {
   console.info('Starting supervisor')
 
+  const HOUR = 1000 * 60 * 60
+  setTimeout(() => {
+    console.error('Scan has taken more than 2 hours! Exiting.')
+    process.exit()
+  }, 2 * HOUR)
+
   const t = Date.now()
 
   try {
