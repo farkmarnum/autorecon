@@ -6,14 +6,18 @@ const getScans = async () => {
 
   const lastTwoScans = await Scan.find().sort({ created_at: -1 }).limit(2)
 
+  if (lastTwoScans.length !== 2) {
+    throw new Error('Not enough records!')
+  }
+
   return lastTwoScans
 }
 
 const parseRecord = (record) => {
-  const infos = record.split('\n')
+  const { entries } = record
 
-  return infos.reduce((acc, info) => {
-    const [subdomain, openPortsStr] = info.split()
+  return entries.reduce((acc, info) => {
+    const [subdomain, openPortsStr] = info.split(' ')
     const openPorts = openPortsStr.split(',')
     return { ...acc, [subdomain]: openPorts }
   }, {})
@@ -40,14 +44,14 @@ const analyze = async () => {
     const prevPorts = new Set(prev[subdomain] || [])
     const currPorts = new Set(curr[subdomain])
 
-    const addedPortsForSubdomain = subtract(currPorts, prevPorts)
-    const removedPortsForSubdomain = subtract(prevPorts, currPorts)
+    const addedPortsForSubdomain = Array.from(subtract(currPorts, prevPorts))
+    const removedPortsForSubdomain = Array.from(subtract(prevPorts, currPorts))
 
-    if (addedPortsForSubdomain) {
-      addedPorts[subdomain] = Array.from(addedPortsForSubdomain)
+    if (addedPortsForSubdomain.length) {
+      addedPorts[subdomain] = addedPortsForSubdomain
     }
-    if (removedPortsForSubdomain) {
-      removedPorts[subdomain] = Array.from(removedPortsForSubdomain)
+    if (removedPortsForSubdomain.length) {
+      removedPorts[subdomain] = removedPortsForSubdomain
     }
   })
 
@@ -59,6 +63,11 @@ const analyze = async () => {
   }
 }
 
-const log = (a) => console.info(a)
-
-init().then(analyze).then(log)
+init()
+  .then(analyze)
+  .then((results) => {
+    // const output = Object.entries(results).map(([k, v]) => {
+    //   return `${k}: ${v.length || Object.keys(v).length}`
+    // })
+    console.info(results)
+  })

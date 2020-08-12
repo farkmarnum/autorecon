@@ -7,6 +7,7 @@
     "scan": "node ./dist/scan.js",
     "analyze": "node ./dist/analyze.js",
     "bs": "npm run build && sudo npm run scan",
+    "ba": "npm run build && npm run analyze",
     "start-scan": "nodemon --exec babel-node src/scan.js",
     "start-analyze": "nodemon --exec babel-node src/analyze.js",
     "docker-build-scan": "docker build -t farkmarnum/autorecon-scan:latest --build-arg CACHEBUST=$(date +%s) ./docker/scan && docker push farkmarnum/autorecon-scan:latest",
