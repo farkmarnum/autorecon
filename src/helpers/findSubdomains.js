@@ -14,7 +14,7 @@ import {
 
 readline.emitKeypressEvents(process.stdin)
 
-const PER_PROC_TIMEOUT = 5 // minutes
+const PER_PROC_TIMEOUT = process.env.FINDOMAIN_HOST_TIMEOUT || 5 // minutes
 const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
 
 export const findomain = async (domain) => {

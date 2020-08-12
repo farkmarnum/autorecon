@@ -8,7 +8,7 @@ import {
 } from '../constants/messages'
 import { chunk } from './util'
 
-const PER_PROC_TIMEOUT = '1m'
+const PER_HOST_TIMEOUT = process.env.NODE_HOST_TIMEOUT || '1m'
 
 export const nmap = async (subdomains) => {
   const nmapSpeedFromEnv = parseInt(process.env.NMAP_SPEED || '3', 10)
@@ -19,7 +19,7 @@ export const nmap = async (subdomains) => {
     '-n',
     `-T${nmapSpeed}`,
     '--host-timeout',
-    PER_PROC_TIMEOUT,
+    PER_HOST_TIMEOUT,
     ...subdomains,
   ])
 
