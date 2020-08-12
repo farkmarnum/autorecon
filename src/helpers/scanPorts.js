@@ -101,7 +101,6 @@ export const scanPorts = (subdomains) =>
     workers.forEach((worker) => {
       worker.on('message', ({ type, data }) => {
         if (type === PORT_RESULT) {
-          process.stdout.write(',')
           subdomainsWithPorts.push(data)
           sendWork(worker)
         } else if (type === REQUEST_WORK) {

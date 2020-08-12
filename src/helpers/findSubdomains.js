@@ -5,14 +5,11 @@
 
 import cluster from 'cluster'
 import { spawn } from 'child_process'
-import readline from 'readline'
 import {
   SCAN_FOR_SUBDOMAINS,
   SUBDOMAIN_RESULT,
   REQUEST_WORK,
 } from '../constants/messages'
-
-readline.emitKeypressEvents(process.stdin)
 
 const PER_PROC_TIMEOUT = process.env.FINDOMAIN_HOST_TIMEOUT || 5 // minutes
 const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
@@ -46,7 +43,6 @@ export const findSubdomains = (domains) =>
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const numberOfDomains = domains.length
     const currentDomains = Array(workers.length).fill(null)
 
     const sendWork = (worker) => {
@@ -79,15 +75,4 @@ export const findSubdomains = (domains) =>
     })
 
     workers.forEach(sendWork)
-
-    process.stdin.on('keypress', () => {
-      const completedDomains =
-        numberOfDomains - domains.length + workers.length - workersFinished
-      const percentDone = (100 * completedDomains) / numberOfDomains
-
-      const pdTxt = percentDone.toFixed(2)
-      const cdTxt = currentDomains.join(', ')
-
-      console.info(`${pdTxt}% complete. Working on: ${cdTxt}`)
-    })
   })
