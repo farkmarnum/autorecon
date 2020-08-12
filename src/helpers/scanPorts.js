@@ -21,26 +21,32 @@ export const nmap = async (subdomains) => {
     '--host-timeout',
     PER_HOST_TIMEOUT,
     '--min-hostgroup',
-    Math.ceil(subdomains.length / 4),
+    Math.ceil(subdomains.length),
+    '--stats-every',
+    '30s',
     ...subdomains,
   ])
 
-  const promise = new Promise((resolve) => {
+  proc.stdout.setEncoding('utf-8')
+  proc.stderr.setEncoding('utf-8')
+
+  const promise = new Promise((resolve, reject) => {
     let resp = ''
-    proc.stdout.setEncoding('utf8').on('data', (data) => {
+
+    proc.stdout.on('data', (data) => {
       resp += data
       if (data.includes('Stats') || data.includes('Timing')) {
         console.info(data)
       }
     })
 
-    const interval = setInterval(() => {
-      proc.stdin.write(' ')
-    }, 60 * 1000)
+    proc.stderr.on('data', (data) => {
+      if (!data.includes('Failed to resolve')) {
+        console.error(data)
+      }
+    })
 
     once(proc, 'exit').then(() => {
-      clearInterval(interval)
-
       const reports = resp.match(/Nmap scan report for [\s\S]*?\n\n/g)
 
       const result = (reports || [])
@@ -68,6 +74,8 @@ export const nmap = async (subdomains) => {
 
       resolve(result)
     })
+
+    once(proc, 'error').then(reject)
   })
 
   return promise
