@@ -4,10 +4,13 @@
   "description": "",
   "scripts": {
     "build": "babel src -d dist",
-    "serve": "node ./dist/scan.js",
-    "bs": "npm run build && npm run serve",
-    "start": "nodemon --exec babel-node src/scan.js",
-    "docker-build-scan": "docker build -t farkmarnum/autorecon:latest --build-arg CACHEBUST=$(date +%s) ./docker/scan && docker push farkmarnum/autorecon:latest"
+    "scan": "node ./dist/scan.js",
+    "analyze": "node ./dist/analyze.js",
+    "bs": "npm run build && sudo npm run scan",
+    "start-scan": "nodemon --exec babel-node src/scan.js",
+    "start-analyze": "nodemon --exec babel-node src/analyze.js",
+    "docker-build-scan": "docker build -t farkmarnum/autorecon-scan:latest --build-arg CACHEBUST=$(date +%s) ./docker/scan && docker push farkmarnum/autorecon-scan:latest",
+    "docker-build-analyze": "docker build -t farkmarnum/autorecon-analyze:latest --build-arg CACHEBUST=$(date +%s) ./docker/analyze && docker push farkmarnum/autorecon-analyze:latest"
   },
   "keywords": [],
   "author": "",

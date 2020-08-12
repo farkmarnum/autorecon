@@ -17,4 +17,4 @@ COPY --from=build /opt/autorecon /opt/autorecon
 WORKDIR /opt/autorecon
 RUN npm i --production
 
-CMD ["node", "./dist/analysis.js"]
+CMD ["node", "./dist/analyze.js"]
