@@ -20,6 +20,8 @@ export const nmap = async (subdomains) => {
     `-T${nmapSpeed}`,
     '--host-timeout',
     PER_HOST_TIMEOUT,
+    '--min-hostgroup',
+    Math.ceil(subdomains.length / 4),
     ...subdomains,
   ])
 
