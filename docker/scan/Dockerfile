@@ -35,4 +35,4 @@ COPY --from=build /opt/autorecon /opt/autorecon
 WORKDIR /opt/autorecon
 RUN npm i --production
 
-CMD ["node", "./dist/index.js"]
+CMD ["node", "./dist/scan.js"]
