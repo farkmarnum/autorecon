@@ -14,8 +14,8 @@ import {
 
 readline.emitKeypressEvents(process.stdin)
 
-const TIMEOUT = 3 // minutes
-const TIMEOUT_MS = TIMEOUT * 60 * 1000
+const PER_PROC_TIMEOUT = 5 // minutes
+const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
 
 export const findomain = async (domain) => {
   const proc = spawn('findomain', ['-q', '-t', domain])
@@ -25,7 +25,7 @@ export const findomain = async (domain) => {
       console.warn(`timeout: ${domain}`)
       proc.kill()
       resolve([])
-    }, TIMEOUT_MS)
+    }, PER_PROC_TIMEOUT_MS)
 
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
       clearTimeout(timeout)
