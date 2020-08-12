@@ -10,10 +10,11 @@ export const getDomains = async () => {
 
   const wildcards = wildcardsText.split(/[\n\r]+/)
 
-  let domains = wildcards.filter((str) => str.match(reWild))
-  domains = domains.map((str) => str.replace(reWild, ''))
-  domains = domains.filter((str) => !str.includes('*'))
-  domains = domains.filter((domain) => !exclude.includes(domain))
+  let domains = wildcards.filter((str) => str.match(reWild)) // must have leading wildcard
+  domains = domains.map((str) => str.replace(reWild, '')) // remove leading wildcard
+  domains = domains.filter((str) => !str.includes('*')) // no other wildcards
+  domains = domains.filter((str) => str.includes('.')) // must be valid domain
+  domains = domains.filter((domain) => !exclude.includes(domain)) // remove domains from exlude list
   domains = Array.from(new Set(domains))
   domains = domains.sort()
 
