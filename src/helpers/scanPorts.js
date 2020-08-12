@@ -29,9 +29,18 @@ export const nmap = async (subdomains) => {
     let resp = ''
     proc.stdout.setEncoding('utf8').on('data', (data) => {
       resp += data
+      if (data.includes('Stats') || data.includes('Timing')) {
+        console.info(data)
+      }
     })
 
+    const interval = setInterval(() => {
+      proc.stdin.write(' ')
+    }, 60 * 1000)
+
     once(proc, 'exit').then(() => {
+      clearInterval(interval)
+
       const reports = resp.match(/Nmap scan report for [\s\S]*?\n\n/g)
 
       const result = (reports || [])
