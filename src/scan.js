@@ -54,11 +54,11 @@ const doSupervisor = async () => {
     const domainData = readCache(DOMAIN_CACHE) || (await getDomains())
     writeCache(DOMAIN_CACHE, domainData)
 
-    const hosts =
+    const subdomainData =
       readCache(SUBDOMAIN_CACHE) || (await findSubdomains(domainData))
-    writeCache(SUBDOMAIN_CACHE, hosts)
+    writeCache(SUBDOMAIN_CACHE, subdomainData)
 
-    const portData = readCache(PORT_CACHE) || (await scanPorts(hosts))
+    const portData = readCache(PORT_CACHE) || (await scanPorts(subdomainData))
     writeCache(PORT_CACHE, portData)
 
     const scan = portData
