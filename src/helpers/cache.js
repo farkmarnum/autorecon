@@ -6,7 +6,7 @@ export const DOMAIN_CACHE = `${CACHE_DIR}/domain_information`
 export const SUBDOMAIN_CACHE = `${CACHE_DIR}/subdomain_information`
 export const PORT_CACHE = `${CACHE_DIR}/port_information`
 
-const NO_CACHE = [true, 'true'].include(process.env.NO_CACHE)
+const NO_CACHE = [true, 'true'].includes(process.env.NO_CACHE)
 
 const cacheInit = () => {
   if (NO_CACHE) return
