@@ -1,7 +1,7 @@
 import dns from 'dns'
 
 export const getUniqueHosts = async (subdomains) => {
-  console.info('Getting IP address for subdomains...')
+  console.info('Getting IP addresses for subdomains...')
   const { Resolver } = dns.promises
   const resolver = new Resolver()
 
@@ -31,5 +31,6 @@ export const getUniqueHosts = async (subdomains) => {
     uniqueHosts.push(subdomain)
   })
 
+  console.info('IP addresses complete')
   return uniqueHosts
 }
