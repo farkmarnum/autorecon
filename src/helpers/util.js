@@ -11,3 +11,14 @@ export const chunk = (array, { chunks, chunkSize }) => {
 
   return result
 }
+
+export const shuffleArray = (array) => {
+  const output = [...array]
+
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[output[i], output[j]] = [output[j], output[i]]
+  }
+
+  return output
+}

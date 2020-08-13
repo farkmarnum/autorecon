@@ -6,7 +6,7 @@ import {
   PORT_RESULT,
   REQUEST_WORK,
 } from '../constants/messages'
-import { chunk } from './util'
+import { chunk, shuffleArray } from './util'
 
 const PER_HOST_TIMEOUT = process.env.NODE_HOST_TIMEOUT || '5m'
 
@@ -89,7 +89,10 @@ export const scanPorts = (subdomains) =>
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const chunkedSubdomains = chunk(subdomains, { chunks: workers.length })
+    const randomlySortedSubdomains = shuffleArray(subdomains)
+    const chunkedSubdomains = chunk(randomlySortedSubdomains, {
+      chunks: workers.length,
+    })
 
     const sendWork = (worker) => {
       if (chunkedSubdomains.length) {
