@@ -22,3 +22,8 @@ export const shuffleArray = (array) => {
 
   return output
 }
+
+export const reverseDomainName = (s) => {
+  const [d, p] = s.split(' ')
+  return `${d.split('.').reverse().join('.')} ${p}`
+}
