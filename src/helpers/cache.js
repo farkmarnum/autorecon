@@ -6,13 +6,23 @@ export const DOMAIN_CACHE = `${CACHE_DIR}/domain_information`
 export const SUBDOMAIN_CACHE = `${CACHE_DIR}/subdomain_information`
 export const PORT_CACHE = `${CACHE_DIR}/port_information`
 
-try {
-  fs.mkdirSync(CACHE_DIR, { recursive: true })
-} catch (err) {
-  if (err.code !== 'EEXIST') throw err
+const NO_CACHE = [true, 'true'].include(process.env.NO_CACHE)
+
+const cacheInit = () => {
+  if (NO_CACHE) return
+
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true })
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err
+  }
 }
 
+cacheInit()
+
 export const readCache = (fname) => {
+  if (NO_CACHE) return undefined
+
   try {
     const data = JSON.parse(fs.readFileSync(fname))
     if (data) {
@@ -26,6 +36,8 @@ export const readCache = (fname) => {
 }
 
 export const writeCache = (fname, data) => {
+  if (NO_CACHE) return
+
   try {
     fs.writeFileSync(fname, JSON.stringify(data))
   } catch (err) {
@@ -34,6 +46,7 @@ export const writeCache = (fname, data) => {
 }
 
 export const clearCache = () => {
+  if (NO_CACHE) return
   ;[DOMAIN_CACHE, SUBDOMAIN_CACHE, PORT_CACHE].forEach((fname) => {
     try {
       fs.renameSync(fname, `${fname}-BKP`)
