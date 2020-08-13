@@ -3,7 +3,6 @@ import mongoose from 'mongoose'
 import { init, exit } from './helpers/init'
 import { getDomains } from './helpers/getDomains'
 import { findomain, findSubdomains } from './helpers/findSubdomains'
-import { getUniqueHosts } from './helpers/getIPs'
 import { nmap, scanPorts } from './helpers/scanPorts'
 import {
   SCAN_FOR_SUBDOMAINS,
@@ -55,13 +54,11 @@ const doSupervisor = async () => {
     const domainData = readCache(DOMAIN_CACHE) || (await getDomains())
     writeCache(DOMAIN_CACHE, domainData)
 
-    const subdomainData =
+    const hosts =
       readCache(SUBDOMAIN_CACHE) || (await findSubdomains(domainData))
-    writeCache(SUBDOMAIN_CACHE, subdomainData)
+    writeCache(SUBDOMAIN_CACHE, hosts)
 
-    const uniqueHosts = await getUniqueHosts(subdomainData)
-
-    const portData = readCache(PORT_CACHE) || (await scanPorts(uniqueHosts))
+    const portData = readCache(PORT_CACHE) || (await scanPorts(hosts))
     writeCache(PORT_CACHE, portData)
 
     const scan = portData

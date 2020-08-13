@@ -15,7 +15,7 @@ const PER_PROC_TIMEOUT = process.env.FINDOMAIN_HOST_TIMEOUT || 5 // minutes
 const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
 
 export const findomain = async (domain) => {
-  const proc = spawn('findomain', ['-q', '-t', domain])
+  const proc = spawn('findomain', ['-q', '-i', '-t', domain])
 
   const promise = new Promise((resolve) => {
     const timeout = setTimeout(() => {
@@ -26,8 +26,8 @@ export const findomain = async (domain) => {
 
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
       clearTimeout(timeout)
-      const subdomains = resp.split('\n').map((s) => s.trim())
-      resolve(subdomains)
+      const ips = resp.split('\n').map((s) => s.trim().split(',').slice(-1)[0])
+      resolve(ips)
     })
   })
 
@@ -38,7 +38,7 @@ export const findSubdomains = (domains) =>
   new Promise((resolve) => {
     console.info('Scanning for subdomains...')
 
-    const subdomains = new Set()
+    const ips = new Set()
 
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
@@ -55,8 +55,8 @@ export const findSubdomains = (domains) =>
         workersFinished += 1
 
         if (workersFinished >= workers.length) {
-          const result = Array.from(subdomains).filter((s) => s.length > 0)
-          console.info(`Found ${result.length} subdomains.`)
+          const result = Array.from(ips).filter((s) => s.length > 0)
+          console.info(`Found ${result.length} hosts.`)
 
           resolve(result)
         }
@@ -66,7 +66,7 @@ export const findSubdomains = (domains) =>
     workers.forEach((worker) => {
       worker.on('message', ({ type, data }) => {
         if (type === SUBDOMAIN_RESULT) {
-          data.forEach((subdomain) => subdomains.add(subdomain))
+          data.forEach((ip) => ips.add(ip))
           sendWork(worker)
         } else if (type === REQUEST_WORK) {
           sendWork(worker)

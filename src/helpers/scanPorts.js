@@ -10,7 +10,7 @@ import { chunk, shuffleArray } from './util'
 
 const PER_HOST_TIMEOUT = process.env.NODE_HOST_TIMEOUT || '5m'
 
-export const nmap = async (subdomains) => {
+export const nmap = async (hosts) => {
   const nmapSpeedFromEnv = parseInt(process.env.NMAP_SPEED || '3', 10)
   const nmapSpeed = Math.max(0, Math.min(5, nmapSpeedFromEnv))
   const proc = spawn('nmap', [
@@ -21,10 +21,10 @@ export const nmap = async (subdomains) => {
     '--host-timeout',
     PER_HOST_TIMEOUT,
     '--min-hostgroup',
-    Math.ceil(subdomains.length / 10),
+    Math.ceil(hosts.length / 10),
     '--stats-every',
     '1m',
-    ...subdomains,
+    ...hosts,
   ])
 
   proc.stdout.setEncoding('utf-8')
@@ -54,8 +54,8 @@ export const nmap = async (subdomains) => {
           try {
             const [infoText, portText] = report.split(/PORT\W+STATE\W+SERVICE/)
 
-            const { subdomain } = infoText.match(
-              /Nmap scan report for (?<subdomain>[^ ]*?) /,
+            const { host } = infoText.match(
+              /Nmap scan report for (?<host>[^ ]*?) /,
             ).groups
 
             const openPorts = (portText || '')
@@ -64,7 +64,7 @@ export const nmap = async (subdomains) => {
               .map((s) => s.replace(/^(\d+).*$/, '$1'))
               .map((s) => parseInt(s, 10))
 
-            return { subdomain, openPorts }
+            return { host, openPorts }
           } catch (err) {
             console.error(err)
             return undefined
@@ -81,29 +81,29 @@ export const nmap = async (subdomains) => {
   return promise
 }
 
-export const scanPorts = (subdomains) =>
+export const scanPorts = (hosts) =>
   new Promise((resolve) => {
-    const subdomainsWithPorts = []
+    const hostsWithPorts = []
     console.info('Scanning for ports...')
 
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const randomlySortedSubdomains = shuffleArray(subdomains)
-    const chunkedSubdomains = chunk(randomlySortedSubdomains, {
+    const randomlySortedHosts = shuffleArray(hosts)
+    const chunkedHosts = chunk(randomlySortedHosts, {
       chunks: workers.length,
     })
 
     const sendWork = (worker) => {
-      if (chunkedSubdomains.length) {
-        const target = chunkedSubdomains.pop()
+      if (chunkedHosts.length) {
+        const target = chunkedHosts.pop()
         worker.send({ type: SCAN_FOR_PORTS, target })
       } else {
         workersFinished += 1
 
         if (workersFinished >= workers.length) {
           console.info('Scanning ports complete.')
-          const result = subdomainsWithPorts.flat()
+          const result = hostsWithPorts.flat()
           resolve(result)
         }
       }
@@ -112,7 +112,7 @@ export const scanPorts = (subdomains) =>
     workers.forEach((worker) => {
       worker.on('message', ({ type, data }) => {
         if (type === PORT_RESULT) {
-          subdomainsWithPorts.push(data)
+          hostsWithPorts.push(data)
           sendWork(worker)
         } else if (type === REQUEST_WORK) {
           sendWork(worker)
