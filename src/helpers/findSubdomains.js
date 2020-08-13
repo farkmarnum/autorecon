@@ -14,8 +14,17 @@ import {
 const PER_PROC_TIMEOUT = process.env.FINDOMAIN_HOST_TIMEOUT || 5 // minutes
 const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
 
+const FINDOMAIN_THREADS = 1000
+
 export const findomain = async (domain) => {
-  const proc = spawn('findomain', ['-q', '-r', '-t', domain])
+  const proc = spawn('findomain', [
+    '-q', // quiet mode
+    '-r', // only resolved subdomains
+    '--threads',
+    FINDOMAIN_THREADS,
+    '-t',
+    domain,
+  ])
 
   const promise = new Promise((resolve) => {
     const timeout = setTimeout(() => {
