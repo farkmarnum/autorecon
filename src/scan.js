@@ -37,7 +37,7 @@ const doSupervisor = async () => {
   console.info('Starting supervisor')
 
   const HOUR = 1000 * 60 * 60
-  setTimeout(() => {
+  const mainTimeout = setTimeout(() => {
     console.error('Scan has taken more than 4 hours! Exiting.')
     process.exit()
   }, 4 * HOUR)
@@ -100,6 +100,7 @@ const doSupervisor = async () => {
 
     // close handles & connections
     await exit()
+    clearTimeout(mainTimeout)
     process.exit(0)
   } catch (err) {
     console.error(err)
