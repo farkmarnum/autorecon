@@ -1,6 +1,6 @@
 import cluster from 'cluster'
 import mongoose from 'mongoose'
-import { init } from './helpers/init'
+import { init, exit } from './helpers/init'
 import { getDomains } from './helpers/getDomains'
 import { findomain, findSubdomains } from './helpers/findSubdomains'
 import { nmap, scanPorts } from './helpers/scanPorts'
@@ -94,6 +94,9 @@ const doSupervisor = async () => {
 
     console.info('Complete.')
     console.info(`Scan took ${Date.now() - t} ms`)
+
+    // close handles & connections
+    await exit()
     process.exit(0)
   } catch (err) {
     console.error(err)

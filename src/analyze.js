@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { init } from './helpers/init'
+import { init, exit } from './helpers/init'
 
 const getScans = async () => {
   const Scan = mongoose.model('scan')
@@ -63,11 +63,11 @@ const analyze = async () => {
   }
 }
 
-init()
-  .then(analyze)
-  .then((results) => {
-    // const output = Object.entries(results).map(([k, v]) => {
-    //   return `${k}: ${v.length || Object.keys(v).length}`
-    // })
-    console.info(results)
+const log = (results) => {
+  const output = Object.entries(results).map(([k, v]) => {
+    return `${k}: ${v.length || Object.keys(v).length}`
   })
+  console.info(output)
+}
+
+init().then(analyze).then(log).then(exit)

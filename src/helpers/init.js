@@ -40,3 +40,7 @@ export const init = async () => {
 
   await connect()
 }
+
+export const exit = async () => {
+  mongoose.disconnect()
+}
