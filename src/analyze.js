@@ -67,7 +67,7 @@ const log = (results) => {
   const output = Object.entries(results).map(([k, v]) => {
     return `${k}: ${v.length || Object.keys(v).length}`
   })
-  console.info(output)
+  console.info(results, output)
 }
 
 init().then(analyze).then(log).then(exit)
