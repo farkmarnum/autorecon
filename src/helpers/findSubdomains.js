@@ -13,19 +13,22 @@ import {
   REQUEST_WORK,
 } from '../constants/messages'
 import { chunk, shuffleArray } from './util'
+import DNS_RESOLVERS from '../constants/resources'
+
+const DNS_RESOLVERS_FNAME = `${__dirname}/tmp/DNS_RESOLVERS.txt`
 
 const FINDOMAIN_THREADS = 1000
 
 export const findomain = async (domains) => {
   const hash = md5(domains.join(' '))
   const fname = `${__dirname}/tmp/${hash}`
-  fs.writeFileSync(fname, domains.join('\n'))
+  await fs.writeFile(fname, domains.join('\n'))
 
   const proc = spawn('findomain', [
     '--quiet',
     '--resolved',
     '--resolvers',
-    `${__dirname}/../constants/DNS_RESOLVERS.txt`,
+    DNS_RESOLVERS_FNAME,
     '--threads',
     FINDOMAIN_THREADS,
     '--file',
@@ -48,6 +51,7 @@ export const findSubdomains = (domains) =>
 
     try {
       fs.mkdirSync(`${__dirname}/tmp`, { recursive: true })
+      fs.writeFileSync(DNS_RESOLVERS_FNAME, DNS_RESOLVERS.join('\n'))
     } catch (err) {
       if (err.code !== 'EEXIST') throw err
     }
