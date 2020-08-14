@@ -7,6 +7,7 @@ import fs from 'fs'
 import util from 'util'
 import cluster from 'cluster'
 import { spawn } from 'child_process'
+import { once } from 'events'
 import md5 from 'md5'
 import {
   SCAN_FOR_SUBDOMAINS,
@@ -24,7 +25,7 @@ const FINDOMAIN_THREADS = 1000
 const writeFile = util.promisify(fs.writeFile)
 
 export const findomain = async (domains) => {
-  const hash = md5(domains.join(' '))
+  const hash = md5(domains.join(' ') + cluster.worker.id)
   const fname = `${TMP_DIR}/${hash}`
   await writeFile(fname, domains.join('\n'))
 
@@ -39,10 +40,16 @@ export const findomain = async (domains) => {
     fname,
   ])
 
+  const subdomains = []
+
   const promise = new Promise((resolve) => {
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
-      const subdomains = resp.split('\n').map((s) => s.trim())
-      resolve(subdomains)
+      const additionalSubdomains = resp.split('\n').map((s) => s.trim())
+      subdomains.push(additionalSubdomains)
+    })
+
+    once(proc, 'exit').then(() => {
+      resolve(subdomains.flat().filter((a) => a.length > 0))
     })
   })
 
