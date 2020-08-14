@@ -4,6 +4,7 @@
  */
 
 import fs from 'fs'
+import util from 'util'
 import cluster from 'cluster'
 import { spawn } from 'child_process'
 import md5 from 'md5'
@@ -13,16 +14,19 @@ import {
   REQUEST_WORK,
 } from '../constants/messages'
 import { chunk, shuffleArray } from './util'
-import DNS_RESOLVERS from '../constants/resources'
+import { DNS_RESOLVERS } from '../constants/resources'
 
-const DNS_RESOLVERS_FNAME = `${__dirname}/tmp/DNS_RESOLVERS.txt`
+const TMP_DIR = `${__dirname}/../tmp`
+const DNS_RESOLVERS_FNAME = `${TMP_DIR}/DNS_RESOLVERS.txt`
 
 const FINDOMAIN_THREADS = 1000
 
+const writeFile = util.promisify(fs.writeFile)
+
 export const findomain = async (domains) => {
   const hash = md5(domains.join(' '))
-  const fname = `${__dirname}/tmp/${hash}`
-  await fs.writeFile(fname, domains.join('\n'))
+  const fname = `${TMP_DIR}/${hash}`
+  await writeFile(fname, domains.join('\n'))
 
   const proc = spawn('findomain', [
     '--quiet',
@@ -50,9 +54,10 @@ export const findSubdomains = (domains) =>
     console.info('Scanning for subdomains...')
 
     try {
-      fs.mkdirSync(`${__dirname}/tmp`, { recursive: true })
+      fs.mkdirSync(TMP_DIR, { recursive: true })
       fs.writeFileSync(DNS_RESOLVERS_FNAME, DNS_RESOLVERS.join('\n'))
     } catch (err) {
+      console.error(err)
       if (err.code !== 'EEXIST') throw err
     }
 
