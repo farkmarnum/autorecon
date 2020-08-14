@@ -9,7 +9,7 @@ RUN apk add --update --no-cache \
   cargo \
   openssl-dev \
   openssl && \
-  git clone https://github.com/Edu4rdSHL/findomain.git && \
+  git clone https://github.com/farkmarnum/findomain.git && \
   cd findomain && \
   OPENSSL_NO_VENDOR=true cargo build --release && \
   cp target/release/findomain /usr/bin
