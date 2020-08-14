@@ -21,7 +21,7 @@ import {
 
 const CPUS = require('os').cpus().length
 
-const PARALLELISM = CPUS * 2
+const PARALLELISM = CPUS
 
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')

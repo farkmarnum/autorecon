@@ -3,38 +3,37 @@
  * See https://github.com/zbo14/sc0pe
  */
 
+import fs from 'fs'
 import cluster from 'cluster'
 import { spawn } from 'child_process'
+import md5 from 'md5'
 import {
   SCAN_FOR_SUBDOMAINS,
   SUBDOMAIN_RESULT,
   REQUEST_WORK,
 } from '../constants/messages'
-
-const PER_PROC_TIMEOUT = process.env.FINDOMAIN_HOST_TIMEOUT || 5 // minutes
-const PER_PROC_TIMEOUT_MS = PER_PROC_TIMEOUT * 60 * 1000
+import { chunk, shuffleArray } from './util'
 
 const FINDOMAIN_THREADS = 1000
 
-export const findomain = async (domain) => {
+export const findomain = async (domains) => {
+  const hash = md5(domains.join(' '))
+  const fname = `${__dirname}/tmp/${hash}`
+  fs.writeFileSync(fname, domains.join('\n'))
+
   const proc = spawn('findomain', [
-    '-q', // quiet mode
-    '-r', // only resolved subdomains
+    '--quiet',
+    '--resolved',
+    '--resolvers',
+    `${__dirname}/../constants/DNS_RESOLVERS.txt`,
     '--threads',
     FINDOMAIN_THREADS,
-    '-t',
-    domain,
+    '--file',
+    fname,
   ])
 
   const promise = new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      console.warn(`timeout: ${domain}`)
-      proc.kill()
-      resolve([])
-    }, PER_PROC_TIMEOUT_MS)
-
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
-      clearTimeout(timeout)
       const subdomains = resp.split('\n').map((s) => s.trim())
       resolve(subdomains)
     })
@@ -47,17 +46,25 @@ export const findSubdomains = (domains) =>
   new Promise((resolve) => {
     console.info('Scanning for subdomains...')
 
+    try {
+      fs.mkdirSync(`${__dirname}/tmp`, { recursive: true })
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err
+    }
+
     const subdomains = new Set()
 
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const currentDomains = Array(workers.length).fill(null)
+    const randomlySortedDomains = shuffleArray(domains)
+    const chunkedDomains = chunk(randomlySortedDomains, {
+      chunks: workers.length,
+    })
 
     const sendWork = (worker) => {
-      if (domains.length) {
-        const target = domains.pop()
-        currentDomains[worker.id - 1] = target
+      if (chunkedDomains.length) {
+        const target = chunkedDomains.pop()
 
         worker.send({ type: SCAN_FOR_SUBDOMAINS, target })
       } else {
