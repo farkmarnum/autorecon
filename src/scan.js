@@ -18,6 +18,7 @@ import {
   writeCache,
   clearCache,
 } from './helpers/cache'
+import { shuffleArray } from './helpers/util'
 
 const CPUS = require('os').cpus().length
 
@@ -54,8 +55,13 @@ const doSupervisor = async () => {
     const domainData = readCache(DOMAIN_CACHE) || (await getDomains())
     writeCache(DOMAIN_CACHE, domainData)
 
+    let domains = shuffleArray(domainData)
+    if (process.env.DOMAIN_SLICE) {
+      domains = domains.slice(0, process.env.DOMAIN_SLICE)
+    }
+
     const subdomainData =
-      readCache(SUBDOMAIN_CACHE) || (await findSubdomains(domainData))
+      readCache(SUBDOMAIN_CACHE) || (await findSubdomains(domains))
     writeCache(SUBDOMAIN_CACHE, subdomainData)
 
     const portData = readCache(PORT_CACHE) || (await scanPorts(subdomainData))

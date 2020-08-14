@@ -73,8 +73,7 @@ export const findSubdomains = (domains) =>
     const workers = Object.values(cluster.workers)
     let workersFinished = 0
 
-    const randomlySortedDomains = shuffleArray(domains)
-    const chunkedDomains = chunk(randomlySortedDomains, {
+    const chunkedDomains = chunk(domains, {
       chunks: workers.length,
     })
 
