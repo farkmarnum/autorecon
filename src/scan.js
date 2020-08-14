@@ -18,11 +18,10 @@ import {
   writeCache,
   clearCache,
 } from './helpers/cache'
-import { shuffleArray } from './helpers/util'
 
 const CPUS = require('os').cpus().length
 
-const PARALLELISM = CPUS
+const PARALLELISM = CPUS * 4
 
 const storeScan = async (entries) => {
   const Scan = mongoose.model('scan')
@@ -55,7 +54,7 @@ const doSupervisor = async () => {
     const domainData = readCache(DOMAIN_CACHE) || (await getDomains())
     writeCache(DOMAIN_CACHE, domainData)
 
-    let domains = shuffleArray(domainData)
+    let domains = domainData
     if (process.env.DOMAIN_SLICE) {
       domains = domains.slice(0, process.env.DOMAIN_SLICE)
     }

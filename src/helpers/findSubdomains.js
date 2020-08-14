@@ -14,13 +14,13 @@ import {
   SUBDOMAIN_RESULT,
   REQUEST_WORK,
 } from '../constants/messages'
-import { chunk, shuffleArray } from './util'
+import { chunk } from './util'
 import { DNS_RESOLVERS } from '../constants/resources'
 
 const TMP_DIR = `${__dirname}/../tmp`
 const DNS_RESOLVERS_FNAME = `${TMP_DIR}/DNS_RESOLVERS.txt`
 
-const FINDOMAIN_THREADS = 1000
+const FINDOMAIN_THREADS = 4096
 
 const writeFile = util.promisify(fs.writeFile)
 
@@ -29,8 +29,11 @@ export const findomain = async (domains) => {
   const fname = `${TMP_DIR}/${hash}`
   await writeFile(fname, domains.join('\n'))
 
+  const loggingIsEnabled = ['true', true].includes(process.env.ENABLE_LOGGING)
+  const quiet = loggingIsEnabled ? '' : '--quiet'
+
   const proc = spawn('findomain', [
-    '--quiet',
+    quiet,
     '--resolved',
     '--resolvers',
     DNS_RESOLVERS_FNAME,
@@ -44,6 +47,9 @@ export const findomain = async (domains) => {
 
   const promise = new Promise((resolve) => {
     proc.stdout.setEncoding('utf8').on('data', (resp) => {
+      if (loggingIsEnabled) {
+        process.stdout.write(resp)
+      }
       const additionalSubdomains = resp.split('\n').map((s) => s.trim())
       subdomains.push(additionalSubdomains)
     })
