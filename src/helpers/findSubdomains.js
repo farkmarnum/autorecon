@@ -50,7 +50,10 @@ export const findomain = async (domains) => {
       if (loggingIsEnabled) {
         process.stdout.write(resp)
       }
-      const additionalSubdomains = resp.split('\n').map((s) => s.trim())
+      const additionalSubdomains = resp
+        .split('\n')
+        .map((s) => s.trim())
+        .filter((a) => !a.includes(' '))
       subdomains.push(additionalSubdomains)
     })
 
